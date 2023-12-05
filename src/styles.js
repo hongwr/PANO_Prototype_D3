@@ -1,5 +1,4 @@
-import { createGlobalStyle } from "styled-components";
-
+import { createGlobalStyle } from 'styled-components';
 
 export const GlobalStyle = createGlobalStyle`
   * {
@@ -8,8 +7,8 @@ export const GlobalStyle = createGlobalStyle`
     padding: 0;
   }
 
-  .circle, .polygon {
+  circle {
     cursor: pointer;
     pointer-events: all;
   }
-`
+`;
