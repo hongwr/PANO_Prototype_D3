@@ -17,6 +17,9 @@ let initialMousePosition: number[] | null = null;
 let initialCirclePosition: number[] | null = null;
 
 function App() {
+    const oldWidth = useRef(0);
+    const oldHeight = useRef(0);
+
     const svgRef = React.useRef<SVGSVGElement>(null); // Create a ref for the SVG element
     const [index, setIndex] = useState<number>(0);
     const [drawing, setDrawing] = useState<boolean>(false);
@@ -178,7 +181,54 @@ function App() {
         newPolygon.call(polygonDrag);
     };
 
-    // console.log(coords);
+    useEffect(() => {
+        const layoutElement = document.getElementById('layout');
+        if (layoutElement) {
+            oldWidth.current = layoutElement.offsetWidth;
+            oldHeight.current = layoutElement.offsetHeight;
+
+            const resizeObserver = new ResizeObserver(handleResize);
+            resizeObserver.observe(layoutElement);
+
+            return () => {
+                resizeObserver.unobserve(layoutElement);
+            };
+        }
+    }, []);
+
+    function handleResize(entries: any) {
+        console.log(entries);
+        for (let entry of entries) {
+            const newWidth = entry.contentRect.width;
+            const newHeight = entry.contentRect.height;
+
+            const widthRatio = newWidth / oldWidth.current;
+            const heightRatio = newHeight / oldHeight.current;
+
+            d3.selectAll('circle').each(function () {
+                const circle = d3.select(this);
+                const oldCx = parseFloat(circle.attr('cx'));
+                const oldCy = parseFloat(circle.attr('cy'));
+                const newCx = oldCx * widthRatio;
+                const newCy = oldCy * heightRatio;
+                circle.attr('cx', newCx.toFixed(2));
+                circle.attr('cy', newCy.toFixed(2));
+            });
+
+            d3.selectAll('polygon').each(function () {
+                const polygon = d3.select(this);
+                const oldPoints = polygon
+                    .attr('points')
+                    .split(' ')
+                    .map((point) => point.split(',').map(Number));
+                const newPoints = oldPoints.map(([x, y]) => [Number(x * widthRatio).toFixed(2), Number(y * heightRatio).toFixed(2)]);
+                polygon.attr('points', newPoints.join(' '));
+            });
+
+            oldWidth.current = newWidth;
+            oldHeight.current = newHeight;
+        }
+    }
 
     return (
         <>
